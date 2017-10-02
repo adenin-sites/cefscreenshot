@@ -14,9 +14,14 @@ namespace CefScreenshot
 
         public static void Main(string[] args)
         {
-            const string testUrl = "https://www.google.com/";
+            var options = new Options();
+            if (!CommandLine.Parser.Default.ParseArguments(args, options))
+            {
+                //Show the help screen and return if option requirements are not met.
+                return;
+            }
 
-            Console.WriteLine("This example application will load {0}, take a screenshot, and save it to your desktop.", testUrl);
+            Console.WriteLine("This example application will load {0}, take a screenshot, and save it to your desktop.", options.Url);
             Console.WriteLine("You may see Chromium debugging output, please wait...");
             Console.WriteLine();
 
@@ -30,7 +35,7 @@ namespace CefScreenshot
             Cef.Initialize(settings, performDependencyCheck: true, browserProcessHandler: null);
 
             // Create the offscreen Chromium browser.
-            browser = new ChromiumWebBrowser(testUrl);
+            browser = new ChromiumWebBrowser(options.Url);
 
             // An event that is fired when the first page is finished loading.
             // This returns to us from another thread.
