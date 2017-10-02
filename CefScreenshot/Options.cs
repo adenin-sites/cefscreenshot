@@ -18,7 +18,6 @@ namespace CefScreenshot
             var help = new HelpText
             {
                 Heading = new HeadingInfo("CefScreenshot", "v0.1"),
-                Copyright = new CopyrightInfo("Jacob Millward", 2017),
                 AdditionalNewLineAfterOption = true,
                 AddDashesToOption = true
             };
