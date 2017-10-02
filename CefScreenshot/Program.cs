@@ -12,9 +12,12 @@ namespace CefScreenshot
     {
         private static ChromiumWebBrowser browser;
         private static Options options;
+        private static Stopwatch watch;
 
         public static void Main(string[] args)
         {
+            watch = Stopwatch.StartNew();
+
             options = new Options();
             if (!CommandLine.Parser.Default.ParseArguments(args, options))
             {
@@ -83,10 +86,13 @@ namespace CefScreenshot
                     // The image type is auto-detected via the ".png" extension.
                     task.Result.Save(screenshotPath);
 
+                    watch.Stop();
+
                     // We no longer need the Bitmap.
                     // Dispose it to avoid keeping the memory alive.  Especially important in 32-bit applications.
                     task.Result.Dispose();
 
+                    Console.WriteLine("Total time: " + watch.ElapsedMilliseconds + "ms");
                     Console.WriteLine("Press any key to exit.");
                 }, TaskScheduler.Default);
             }
