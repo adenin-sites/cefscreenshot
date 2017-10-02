@@ -21,7 +21,7 @@ namespace CefScreenshot
                 AdditionalNewLineAfterOption = true,
                 AddDashesToOption = true
             };
-            help.AddPreOptionsLine("Usage: CefScreenshot - u < url > [-o<path>][-h]");
+            help.AddPreOptionsLine("Usage: CefScreenshot - u < url > [-o <path>]");
             help.AddOptions(this);
             return help;
         }
