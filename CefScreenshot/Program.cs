@@ -29,7 +29,7 @@ namespace CefScreenshot
             var settings = new CefSharp.CefSettings()
             {
                 //By default CefSharp will use an in-memory cache, you need to specify a Cache Folder to persist data
-                CachePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CefSharp\\Cache")
+                CachePath = options.cacheLocation
             };
 
             //Perform dependency check to make sure all relevant resources are in our output directory.
