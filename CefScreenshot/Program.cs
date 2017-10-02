@@ -11,19 +11,16 @@ namespace CefScreenshot
     public class Program
     {
         private static ChromiumWebBrowser browser;
+        private static Options options;
 
         public static void Main(string[] args)
         {
-            var options = new Options();
+            options = new Options();
             if (!CommandLine.Parser.Default.ParseArguments(args, options))
             {
                 //Show the help screen and return if option requirements are not met.
                 return;
             }
-
-            Console.WriteLine("This example application will load {0}, take a screenshot, and save it to your desktop.", options.Url);
-            Console.WriteLine("You may see Chromium debugging output, please wait...");
-            Console.WriteLine();
 
             var settings = new CefSharp.CefSettings()
             {
@@ -42,6 +39,7 @@ namespace CefScreenshot
             browser.LoadingStateChanged += BrowserLoadingStateChanged;
 
             // We have to wait for something, otherwise the process will exit too soon.
+            /* Jacob: After the basic prototype is done, this needs to be changed to a non-user interactive wait. Probably waiting for the screenshot to be done in some thread-safe manner */
             Console.ReadKey();
 
             // Clean up Chromium objects.  You need to call this in your application otherwise
@@ -59,38 +57,38 @@ namespace CefScreenshot
                 // Remove the load event handler, because we only want one snapshot of the initial page.
                 browser.LoadingStateChanged -= BrowserLoadingStateChanged;
 
-                var scriptTask = browser.EvaluateScriptAsync("document.getElementById('lst-ib').value = 'CefSharp Was Here!'");
-
-                scriptTask.ContinueWith(t =>
+                //Give the browser a little time to render
+                /* Jacob: See if there is a way to wait for DomContentLoad event? */
+                Thread.Sleep(500);
+                // Wait for the screenshot to be taken.
+                var task = browser.ScreenshotAsync();
+                task.ContinueWith(x =>
                 {
-                    //Give the browser a little time to render
-                    Thread.Sleep(500);
-                    // Wait for the screenshot to be taken.
-                    var task = browser.ScreenshotAsync();
-                    task.ContinueWith(x =>
+
+                    // Make a file to save it to
+                    string screenshotPath;
+                    if (options.OutputFile != "")
                     {
-                        // Make a file to save it to (e.g. C:\Users\jan\Desktop\CefSharp screenshot.png)
-                        var screenshotPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "CefSharp screenshot.png");
+                        screenshotPath = options.OutputFile;
+                    }
+                    else
+                    {
+                        screenshotPath = Path.Combine(System.IO.Path.GetTempPath(), DateTime.Now.ToString("yyyyMMddHHmmss")+".png");
+                    }
 
-                        Console.WriteLine();
-                        Console.WriteLine("Screenshot ready. Saving to {0}", screenshotPath);
+                    Console.WriteLine();
+                    Console.WriteLine("Screenshot ready. Saving to {0}", screenshotPath);
 
-                        // Save the Bitmap to the path.
-                        // The image type is auto-detected via the ".png" extension.
-                        task.Result.Save(screenshotPath);
+                    // Save the Bitmap to the path.
+                    // The image type is auto-detected via the ".png" extension.
+                    task.Result.Save(screenshotPath);
 
-                        // We no longer need the Bitmap.
-                        // Dispose it to avoid keeping the memory alive.  Especially important in 32-bit applications.
-                        task.Result.Dispose();
+                    // We no longer need the Bitmap.
+                    // Dispose it to avoid keeping the memory alive.  Especially important in 32-bit applications.
+                    task.Result.Dispose();
 
-                        Console.WriteLine("Screenshot saved.  Launching your default image viewer...");
-
-                        // Tell Windows to launch the saved image.
-                        Process.Start(screenshotPath);
-
-                        Console.WriteLine("Image viewer launched.  Press any key to exit.");
-                    }, TaskScheduler.Default);
-                });
+                    Console.WriteLine("Press any key to exit.");
+                }, TaskScheduler.Default);
             }
         }
     }
