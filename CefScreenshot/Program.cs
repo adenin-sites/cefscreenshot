@@ -13,6 +13,7 @@ namespace CefScreenshot
         private static ChromiumWebBrowser browser;
         private static Options options;
         private static Stopwatch watch;
+        private static ManualResetEvent screenShotFinished = new ManualResetEvent(false);
 
         public static void Main(string[] args)
         {
@@ -41,9 +42,8 @@ namespace CefScreenshot
             // This returns to us from another thread.
             browser.LoadingStateChanged += BrowserLoadingStateChanged;
 
-            // We have to wait for something, otherwise the process will exit too soon.
-            /* Jacob: After the basic prototype is done, this needs to be changed to a non-user interactive wait. Probably waiting for the screenshot to be done in some thread-safe manner */
-            Console.ReadKey();
+            // Wait on the finished event
+            screenShotFinished.WaitOne();
 
             // Clean up Chromium objects.  You need to call this in your application otherwise
             // you will get a crash when closing.
@@ -79,7 +79,6 @@ namespace CefScreenshot
                         screenshotPath = Path.Combine(System.IO.Path.GetTempPath(), DateTime.Now.ToString("yyyyMMddHHmmss")+".png");
                     }
 
-                    Console.WriteLine();
                     Console.WriteLine("Screenshot ready. Saving to {0}", screenshotPath);
 
                     // Save the Bitmap to the path.
@@ -93,7 +92,7 @@ namespace CefScreenshot
                     task.Result.Dispose();
 
                     Console.WriteLine("Total time: " + watch.ElapsedMilliseconds + "ms");
-                    Console.WriteLine("Press any key to exit.");
+                    screenShotFinished.Set();
                 }, TaskScheduler.Default);
             }
         }
